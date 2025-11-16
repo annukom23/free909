@@ -1,4 +1,10 @@
+name: RDP 
 
+on:
+  workflow_dispatch:
+
+jobs:
+  secure-rdp:
     runs-on: windows-latest
     timeout-minutes: 3600
 
@@ -109,3 +115,5 @@
           while ($true) {
               Write-Host "[$(Get-Date)] RDP Active - adnwebs.com - Use Ctrl+C in workflow to terminate"
               Start-Sleep -Seconds 300
+          }
+
