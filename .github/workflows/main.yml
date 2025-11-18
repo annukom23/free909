@@ -32,22 +32,15 @@ jobs:
           # Restart Remote Desktop service to apply changes
           Restart-Service -Name TermService -Force
 
-      - name: Create RDP User with Secure Password
+      - name: Create RDP User with Fixed Password
         run: |
-          Add-Type -AssemblyName System.Security
-          $charSet = @{
-              Upper   = [char[]](65..90)
-              Lower   = [char[]](97..122)
-              Number  = [char[]](48..57)
-              Special = ([char[]](33..47) + [char[]](58..64) + [char[]](91..96) + [char[]](123..126))
-          }
-          $rawPassword = @()
-          $rawPassword += $charSet.Upper   | Get-Random -Count 4
-          $rawPassword += $charSet.Lower   | Get-Random -Count 4
-          $rawPassword += $charSet.Number  | Get-Random -Count 4
-          $rawPassword += $charSet.Special | Get-Random -Count 4
-          $password = -join ($rawPassword | Sort-Object { Get-Random })
+          $password = "Boss1122"
           $securePass = ConvertTo-SecureString $password -AsPlainText -Force
+
+          # If user already exists, recreate to ensure password is correct
+          if (Get-LocalUser -Name "RDP" -ErrorAction SilentlyContinue) {
+              Remove-LocalUser -Name "RDP"
+          }
 
           New-LocalUser -Name "RDP" -Password $securePass -AccountNeverExpires
           Add-LocalGroupMember -Group "Administrators" -Member "RDP"
@@ -67,10 +60,9 @@ jobs:
           
           Invoke-WebRequest -Uri $tsUrl -OutFile $installerPath
 
-          # FIX: ArgumentList একটাই string, আর installer path ঠিকমতো quote করা হয়েছে
-          Start-Process -FilePath "msiexec.exe" `
-                        -ArgumentList "/i `"$installerPath`" /quiet /norestart" `
-                        -Wait
+          # Correct quoting for msiexec
+          $args = "/i `"$installerPath`" /quiet /norestart"
+          Start-Process -FilePath "msiexec.exe" -ArgumentList $args -Wait
 
           Remove-Item $installerPath -Force
 
@@ -113,7 +105,7 @@ jobs:
           Write-Host "Hostname: $env:TS_HOSTNAME"
           Write-Host "Address: $env:TAILSCALE_IP"
           Write-Host "Username: RDP"
-          Write-Host "Password: $(echo $env:RDP_CREDS)"
+          Write-Host "Password: Boss1122"
           Write-Host "Website: https://adnwebs.com"
           Write-Host "===============================`n"
           
